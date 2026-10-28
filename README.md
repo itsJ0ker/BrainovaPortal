@@ -61,7 +61,7 @@ A high-performance, production-ready assessment and Olympiad examination platfor
 ### 🛡️ 6. Multi-Layered Anti-Cheating Engine
 - **Client Deterrence**: Intercepts tab switching, window focus loss, fullscreen exit, right-click context menus, and copy/paste actions.
 - **Smart Debouncing**: Debounces companion events (`tab_switch` followed by `focus_loss` within 2000ms) to eliminate false positives.
-- **Server-Authoritative auto-submission**: Configurable thresholds (`maxViolations: 3`) immediately finalize and grade the exam when breached.
+- **Server-Authoritative auto-submission**: Configurable thresholds (`maxViolations: 3`) immediately finalize and grade the exam when breched.
 - **Post-Deadline Exploit Prevention**: Server validates arrival timestamps against `serverDeadline`; expired requests trigger automatic transition to `timed_out`.
 - **Atomic MongoDB Saves**: Uses `$set` and `$push` operators to eliminate race conditions during high-frequency parallel autosaves.
 
@@ -192,7 +192,7 @@ cp .env.example .env.local
 
 ### 3. Run Automated Bot Testing Suite
 ```bash
-npm test
+npm test 
 ```
 Executes all 46 tests across all 11 test suites.
 
