@@ -86,7 +86,14 @@ const ExamTargetingSchema = new Schema(
 
 const ExamSchema = new Schema<IExam>(
   {
-    schoolId: { type: Schema.Types.ObjectId as any, ref: "School", required: true, index: true },
+    schoolId: { type: Schema.Types.ObjectId as any, ref: "School", required: false, index: true },
+    isPlatformExam: { type: Boolean, default: false, index: true },
+    participatingSchoolIds: [{ type: Schema.Types.ObjectId as any, ref: "School" }],
+    createdByRole: {
+      type: String,
+      enum: ["super_admin", "school_admin", "teacher"],
+      default: "school_admin",
+    },
     title: { type: String, required: true, trim: true },
     slug: { type: String, required: true, trim: true },
     accessCode: { type: String, required: true, uppercase: true, trim: true },
@@ -109,6 +116,7 @@ const ExamSchema = new Schema<IExam>(
 
 ExamSchema.index({ schoolId: 1, accessCode: 1 }, { unique: true });
 ExamSchema.index({ accessCode: 1 }); // For direct public test portal lookup
+ExamSchema.index({ participatingSchoolIds: 1 });
 ExamSchema.index({ schoolId: 1, status: 1 });
 ExamSchema.index({ schoolId: 1, createdAt: -1 });
 

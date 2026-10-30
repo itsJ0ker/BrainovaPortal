@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { PlatformMetrics } from "@/components/super-admin/PlatformMetrics";
 import { SchoolList } from "@/components/super-admin/SchoolList";
 import { CreateSchoolModal } from "@/components/super-admin/CreateSchoolModal";
+import { GlobalExamList } from "@/components/super-admin/GlobalExamList";
+import { CreateSuperAdminExamModal } from "@/components/super-admin/CreateSuperAdminExamModal";
 import { Badge } from "@/components/ui/Badge";
 import { SchoolStatus } from "@/types";
 import { useRouter } from "next/navigation";
@@ -24,6 +26,8 @@ import {
   GraduationCap,
   Users,
   FileSpreadsheet,
+  BookOpen,
+  Sparkles,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -33,8 +37,11 @@ export default function SuperAdminPage() {
   const [metrics, setMetrics] = useState<any>(null);
   const [schools, setSchools] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<"schools" | "logs">("schools");
+  const [exams, setExams] = useState<any[]>([]);
+  const [examMetrics, setExamMetrics] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<"schools" | "exams" | "logs">("schools");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExamModalOpen, setIsExamModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -73,21 +80,27 @@ export default function SuperAdminPage() {
         }
       }
 
-      const [metricsRes, schoolsRes, logsRes] = await Promise.all([
+      const [metricsRes, schoolsRes, logsRes, examsRes] = await Promise.all([
         fetch("/api/super-admin/analytics"),
         fetch("/api/super-admin/schools"),
         fetch("/api/super-admin/audit-logs"),
+        fetch("/api/super-admin/exams"),
       ]);
 
-      const [metricsData, schoolsData, logsData] = await Promise.all([
+      const [metricsData, schoolsData, logsData, examsData] = await Promise.all([
         metricsRes.json(),
         schoolsRes.json(),
         logsRes.json(),
+        examsRes.json(),
       ]);
 
       if (metricsData.success) setMetrics(metricsData.metrics);
       if (schoolsData.success) setSchools(schoolsData.schools);
       if (logsData.success) setAuditLogs(logsData.logs);
+      if (examsData.success) {
+        setExams(examsData.exams);
+        setExamMetrics(examsData.metrics);
+      }
     } catch (err) {
       console.error("Super Admin fetch error:", err);
     } finally {
@@ -181,6 +194,24 @@ export default function SuperAdminPage() {
               <span>Institutions Directory</span>
               <span className="ml-auto text-[10px] font-mono bg-slate-200/70 text-slate-700 px-1.5 py-0.5 rounded-md">
                 {schools.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab("exams");
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                activeTab === "exams"
+                  ? "bg-indigo-50 text-indigo-700 font-bold shadow-sm border border-indigo-200/60"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
+              }`}
+            >
+              <BookOpen className={`w-4 h-4 flex-shrink-0 ${activeTab === "exams" ? "text-indigo-600" : "text-slate-400"}`} />
+              <span>Examinations Hub</span>
+              <span className="ml-auto text-[10px] font-mono bg-indigo-100 text-indigo-700 font-bold px-1.5 py-0.5 rounded-md">
+                {exams.length}
               </span>
             </button>
 
@@ -307,12 +338,16 @@ export default function SuperAdminPage() {
               <span className="font-semibold text-slate-400 hidden sm:inline">Super Admin Console</span>
               <ChevronRight className="w-3.5 h-3.5 text-slate-300 hidden sm:inline" />
               <span className="font-bold text-slate-900 text-sm">
-                {activeTab === "schools" ? "Institutions Directory" : "Platform Activity & Audit"}
+                {activeTab === "schools"
+                  ? "Institutions Directory"
+                  : activeTab === "exams"
+                  ? "Examinations Hub"
+                  : "Platform Activity & Audit"}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             {/* Live IST Clock */}
             {currentTime && (
               <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-mono text-slate-600">
@@ -332,12 +367,21 @@ export default function SuperAdminPage() {
             </button>
 
             <button
+              onClick={() => setIsExamModalOpen(true)}
+              className="flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 text-xs font-bold shadow-sm transition-all active:scale-95"
+            >
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              <span className="hidden sm:inline">Create National Exam</span>
+              <span className="sm:hidden">Exam</span>
+            </button>
+
+            <button
               onClick={() => setIsModalOpen(true)}
               className="flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-2 text-xs font-bold shadow-sm transition-all active:scale-95"
             >
               <Plus className="w-4 h-4 text-emerald-400" />
               <span className="hidden sm:inline">Register School</span>
-              <span className="sm:hidden">Register</span>
+              <span className="sm:hidden">School</span>
             </button>
           </div>
         </header>
@@ -390,6 +434,18 @@ export default function SuperAdminPage() {
               </button>
 
               <button
+                onClick={() => setActiveTab("exams")}
+                className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold tracking-wide transition-colors border-b-2 -mb-[2px] ${
+                  activeTab === "exams"
+                    ? "border-slate-900 text-slate-900"
+                    : "border-transparent text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                <BookOpen className="w-4 h-4 text-cyan-600" />
+                <span>Examinations Hub ({exams.length})</span>
+              </button>
+
+              <button
                 onClick={() => setActiveTab("logs")}
                 className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold tracking-wide transition-colors border-b-2 -mb-[2px] ${
                   activeTab === "logs"
@@ -404,6 +460,15 @@ export default function SuperAdminPage() {
 
             {activeTab === "schools" ? (
               <SchoolList schools={schools} onStatusChange={handleStatusChange} />
+            ) : activeTab === "exams" ? (
+              <GlobalExamList
+                exams={exams}
+                schools={schools}
+                metrics={examMetrics}
+                isLoading={isLoading}
+                onRefresh={fetchData}
+                onCreateExam={() => setIsExamModalOpen(true)}
+              />
             ) : (
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-4 flex items-center gap-2">
@@ -445,6 +510,14 @@ export default function SuperAdminPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSchoolCreated={fetchData}
+      />
+
+      {/* Create Super Admin Exam Modal */}
+      <CreateSuperAdminExamModal
+        isOpen={isExamModalOpen}
+        onClose={() => setIsExamModalOpen(false)}
+        schools={schools}
+        onExamCreated={fetchData}
       />
     </div>
   );

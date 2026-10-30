@@ -27,7 +27,11 @@ export async function GET(
       return NextResponse.json({ success: false, error: "School not found." }, { status: 404 });
     }
 
-    const exams = await Exam.find({ schoolId: school._id }).sort({ createdAt: -1 }).lean();
+    const exams = await Exam.find({
+      $or: [{ schoolId: school._id }, { participatingSchoolIds: school._id }],
+    })
+      .sort({ createdAt: -1 })
+      .lean();
 
     // Attach attempt metrics to each exam
     const examsWithStats = await Promise.all(

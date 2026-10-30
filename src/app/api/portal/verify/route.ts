@@ -77,8 +77,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Identify student by provided identifiers
-    const studentQuery: any = { schoolId: exam.schoolId };
+    // Identify student by provided identifiers across eligible participating schools
+    const eligibleSchoolIds =
+      exam.participatingSchoolIds && exam.participatingSchoolIds.length > 0
+        ? exam.participatingSchoolIds
+        : exam.schoolId
+        ? [exam.schoolId]
+        : [];
+
+    const studentQuery: any = {
+      schoolId: eligibleSchoolIds.length === 1 ? eligibleSchoolIds[0] : { $in: eligibleSchoolIds },
+    };
     const orConditions: any[] = [];
 
     if (rollNumber) {
@@ -216,7 +225,7 @@ export async function POST(req: NextRequest) {
           attemptId: activeAttempt._id.toString(),
           examId: exam._id.toString(),
           studentId: student._id.toString(),
-          schoolId: exam.schoolId.toString(),
+          schoolId: (activeAttempt.schoolId || student.schoolId || exam.schoolId).toString(),
           serverDeadline: activeAttempt.serverDeadline,
         });
 
@@ -294,7 +303,7 @@ export async function POST(req: NextRequest) {
     const shuffledOrder = sanitizedQuestions.map((q) => q.id);
 
     const newAttempt = await ExamAttempt.create({
-      schoolId: exam.schoolId,
+      schoolId: student.schoolId || exam.schoolId,
       examId: exam._id,
       studentId: student._id,
       studentSnapshot: {
@@ -327,7 +336,7 @@ export async function POST(req: NextRequest) {
       attemptId: newAttempt._id.toString(),
       examId: exam._id.toString(),
       studentId: student._id.toString(),
-      schoolId: exam.schoolId.toString(),
+      schoolId: (student.schoolId || exam.schoolId).toString(),
       serverDeadline: newAttempt.serverDeadline,
     });
 

@@ -19,7 +19,10 @@ export async function POST(
       return NextResponse.json({ success: false, error: "School not found." }, { status: 404 });
     }
 
-    const exam = await Exam.findOne({ _id: examId, schoolId: school._id });
+    const exam = await Exam.findOne({
+      _id: examId,
+      $or: [{ schoolId: school._id }, { participatingSchoolIds: school._id }],
+    });
     if (!exam) {
       return NextResponse.json({ success: false, error: "Exam not found." }, { status: 404 });
     }

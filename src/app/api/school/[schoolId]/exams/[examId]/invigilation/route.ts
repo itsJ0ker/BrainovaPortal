@@ -21,7 +21,10 @@ export async function GET(
       return NextResponse.json({ success: false, error: "School not found." }, { status: 404 });
     }
 
-    const exam = await Exam.findOne({ _id: examId, schoolId: school._id }).lean();
+    const exam = await Exam.findOne({
+      _id: examId,
+      $or: [{ schoolId: school._id }, { participatingSchoolIds: school._id }],
+    }).lean();
     if (!exam) {
       return NextResponse.json({ success: false, error: "Exam not found." }, { status: 404 });
     }
@@ -203,7 +206,10 @@ export async function POST(
 
     const [attempt, exam] = await Promise.all([
       ExamAttempt.findOne({ _id: attemptId, schoolId: school._id }),
-      Exam.findOne({ _id: examId, schoolId: school._id }),
+      Exam.findOne({
+        _id: examId,
+        $or: [{ schoolId: school._id }, { participatingSchoolIds: school._id }],
+      }),
     ]);
 
     if (!attempt || !exam) {

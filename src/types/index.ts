@@ -124,7 +124,10 @@ export type ExamStatus = "draft" | "published" | "ongoing" | "completed" | "arch
 
 export interface IExam {
   _id: any;
-  schoolId: any;
+  schoolId?: any;
+  isPlatformExam?: boolean;
+  participatingSchoolIds?: any[];
+  createdByRole?: "super_admin" | "school_admin" | "teacher";
   title: string;
   slug: string;
   accessCode: string;
